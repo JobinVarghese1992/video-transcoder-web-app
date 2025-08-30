@@ -1,16 +1,17 @@
+// src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
-import { routeTree } from './routeTree.gen';
+import { routeTree } from './routes'; // ← use manual routes.tsx export
 import { AuthProvider, useAuth } from '@/auth';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
-const queryClient = new QueryClient(); // ✅ semicolon
-const router = createRouter({ routeTree }); // ✅ semicolon
+const queryClient = new QueryClient();
+const router = createRouter({ routeTree });
 
 declare module '@tanstack/react-router' {
   interface Register {
@@ -24,8 +25,12 @@ function AppBody() {
     <QueryClientProvider client={queryClient}>
       <MantineProvider defaultColorScheme="dark">
         <Notifications position="top-right" />
-        {/* ✅ Pass auth state into router so guards can see it */}
-        <RouterProvider router={router} context={{ authed: auth.isAuthed }} />
+        {/* Pass auth state & force guards to re-run when it changes */}
+        <RouterProvider
+          key={auth.isAuthed ? 'authed' : 'guest'}
+          router={router}
+          context={{ authed: auth.isAuthed }}
+        />
       </MantineProvider>
     </QueryClientProvider>
   );

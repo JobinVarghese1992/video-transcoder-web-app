@@ -1,21 +1,26 @@
 {
-    "compilerOptions": {
-      "target": "ES2022",
-      "useDefineForClassFields": true,
-      "lib": ["ES2022", "DOM", "DOM.Iterable"],
-      "module": "ESNext",
-      "skipLibCheck": true,
-      "moduleResolution": "Bundler",
-      "resolveJsonModule": true,
-      "isolatedModules": true,
-      "noEmit": true,
-      "jsx": "react-jsx",
-      "baseUrl": ".",
-      "paths": {
-        "@/*": ["src/*"],
-        "@": ["src"]
-      }
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@": ["src"]
     },
-    "include": ["src"]
-  }
-  
+
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
+
+    "strict": true,                              // ✅ required by TanStack Router
+    "forceConsistentCasingInFileNames": true,
+    "types": ["vite/client"]                     // ✅ gives you import.meta.env types
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/**/*.test.tsx"]  // optional
+}

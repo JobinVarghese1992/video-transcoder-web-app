@@ -1,18 +1,11 @@
 // src/api/index.ts
 
-// Allow reading runtime envs from window.__ENV__ when running in Docker/NGINX
 declare global {
   interface Window {
-    __ENV__?: {
-      BASE_URL?: string;
-      APP_NAME?: string;
-      DEFAULT_PAGE_SIZE?: string;
-    };
+    __ENV__?: { BASE_URL?: string; APP_NAME?: string; DEFAULT_PAGE_SIZE?: string };
   }
 }
 
-// Prefer runtime value (injected by /env.js) and fall back to Vite build-time env.
-// Strip trailing slashes so `${BASE_URL}${path}` is safe.
 const RUNTIME_BASE_URL =
   (typeof window !== 'undefined' && window.__ENV__?.BASE_URL) || '';
 
@@ -65,7 +58,6 @@ async function req(path: string, init: RequestInit = {}) {
 
   const r = await fetch(`${BASE_URL}${path}`, { ...init, headers });
 
-  // Optional: auto-logout on 401 so the app can recover gracefully
   if (r.status === 401) {
     setToken(null);
     if (typeof window !== 'undefined') {
@@ -98,11 +90,11 @@ export async function logout() {
 
 export type ListQuery = {
   limit?: number;
-  sort?: string; // e.g. createdAt:desc
+  sort?: string;
   createdBy?: 'me' | string;
-  filter?: string; // e.g. transcode_status:completed
-  q?: string; // optional free text (if server supports it)
-  cursor?: string; // JSON string from previous response.pagination.cursor
+  filter?: string;
+  q?: string;
+  cursor?: string; // JSON string from response.pagination.cursor
 };
 
 export async function listVideos(
@@ -114,7 +106,7 @@ export async function listVideos(
   if (q.createdBy) qp.set('createdBy', q.createdBy);
   if (q.filter) qp.set('filter', q.filter);
   if (q.q) qp.set('q', q.q);
-  if (q.cursor) qp.set('cursor', q.cursor); // raw JSON string; URLSearchParams will encode
+  if (q.cursor) qp.set('cursor', q.cursor);
 
   const r = await req(`/api/v1/videos?${qp.toString()}`);
   return r.json();
@@ -149,13 +141,8 @@ export async function startTranscode(videoId: string) {
   return r.json();
 }
 
-// Upload flow based on your client-upload.js
-export type PresignSingle = {
-  strategy: 'single';
-  url: string;
-  key: string;
-  videoId: string;
-};
+// Upload flow
+export type PresignSingle = { strategy: 'single'; url: string; key: string; videoId: string };
 export type PresignPart = { partNumber: number; url: string };
 export type PresignMultipart = {
   strategy: 'multipart';

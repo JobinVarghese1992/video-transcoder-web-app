@@ -1,3 +1,4 @@
+// src/pages/VideosPage.tsx
 import { useState } from 'react';
 import {
   ActionIcon,
@@ -59,8 +60,10 @@ export default function VideosPage() {
 
   const { data, isFetching } = useQuery({
     queryKey: ['videos', currentCursor ?? null, limit, sort, q, statusFilter],
-    queryFn: () => API.listVideos({ cursor: currentCursor, limit, sort, q, createdBy: 'me', filter: statusFilter }),
-    keepPreviousData: true,
+    queryFn: () =>
+      API.listVideos({ cursor: currentCursor, limit, sort, q, createdBy: 'me', filter: statusFilter }),
+    // React Query v5: use placeholderData (keeps previous page visible during refetch)
+    placeholderData: (prev) => prev,
     staleTime: 5_000,
   });
 
@@ -153,7 +156,8 @@ export default function VideosPage() {
             resetPagination();
             qc.invalidateQueries({ queryKey: ['videos'] });
           }}
-          loading={isFetching}
+          aria-label="Refresh"
+          disabled={isFetching}
         >
           <IconRefresh size={16} />
         </ActionIcon>
@@ -173,9 +177,9 @@ export default function VideosPage() {
               </Text>
             )}
             <Group mt="sm" justify="space-between">
-              <Button component={Link} to="/videos/$videoId" params={{ videoId: v.videoId }} size="xs" variant="subtle">
-                Open
-              </Button>
+              <Link to="/videos/$videoId" params={{ videoId: v.videoId }}>
+                <Button size="xs" variant="subtle">Open</Button>
+              </Link>
               <Tooltip label="Start (re)transcode">
                 <ActionIcon
                   onClick={async () => {
@@ -183,6 +187,7 @@ export default function VideosPage() {
                     qc.invalidateQueries({ queryKey: ['videos'] });
                   }}
                   variant="light"
+                  aria-label="Transcode"
                 >
                   <IconPlayerPlay size={16} />
                 </ActionIcon>

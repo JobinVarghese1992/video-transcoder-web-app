@@ -1,17 +1,23 @@
-import { createRootRoute, createRoute, Outlet, redirect } from '@tanstack/react-router';
+// src/routes.tsx
+import { createRootRoute, createRoute, Outlet, redirect, Link, useNavigate } from '@tanstack/react-router';
 import { AppShell, Burger, Group, Title, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useAuth } from '@/auth';
-import LoginPage from '@/pages/LoginPage'; // auth screen
+import LoginPage from '@/pages/LoginPage';
 import VideosPage from '@/pages/VideosPage';
-import VideoDetailPage from '@/pages/VideoDetailPage'; // details page
-import { Link, useNavigate } from '@tanstack/react-router';
+import VideoDetailPage from '@/pages/VideoDetailPage';
 
 export const rootRoute = createRootRoute({
   component: function Root() {
     const [opened, { toggle }] = useDisclosure();
     const auth = useAuth();
     const nav = useNavigate();
+
+    const appName =
+      (typeof window !== 'undefined' && window.__ENV__?.APP_NAME) ||
+      import.meta.env.VITE_APP_NAME ||
+      'Video Transcoder';
+
     return (
       <AppShell
         header={{ height: 56 }}
@@ -21,7 +27,7 @@ export const rootRoute = createRootRoute({
           <Group h="100%" px="md" justify="space-between">
             <Group>
               <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-              <Title order={3}>{import.meta.env.VITE_APP_NAME || 'Video Transcoder'}</Title>
+              <Title order={3}>{appName}</Title>
             </Group>
             <Group>
               {auth.isAuthed ? (
@@ -36,9 +42,9 @@ export const rootRoute = createRootRoute({
                   Logout
                 </Button>
               ) : (
-                <Button size="xs" variant="light" component={Link} to="/login">
-                  Login
-                </Button>
+                <Link to="/login">
+                  <Button size="xs" variant="light">Login</Button>
+                </Link>
               )}
             </Group>
           </Group>
@@ -51,14 +57,12 @@ export const rootRoute = createRootRoute({
   },
 });
 
-function requireAuthed({ context }: { context: { authed: boolean } }) {
-  if (!context.authed) throw redirect({ to: '/login' });
-}
-
 export const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  beforeLoad: requireAuthed,
+  beforeLoad: ({ context }) => {
+    if (!context.authed) throw redirect({ to: '/login' });
+  },
   component: VideosPage,
 });
 
@@ -71,7 +75,9 @@ export const loginRoute = createRoute({
 export const videoDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/videos/$videoId',
-  beforeLoad: requireAuthed,
+  beforeLoad: ({ context }) => {
+    if (!context.authed) throw redirect({ to: '/login' });
+  },
   component: VideoDetailPage,
 });
 
