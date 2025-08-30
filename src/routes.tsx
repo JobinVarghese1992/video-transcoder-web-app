@@ -1,5 +1,12 @@
 // src/routes.tsx
-import { createRootRoute, createRoute, Outlet, redirect, Link, useNavigate } from '@tanstack/react-router';
+import {
+  createRootRouteWithContext,
+  createRoute,
+  Outlet,
+  redirect,
+  Link,
+  useNavigate,
+} from '@tanstack/react-router';
 import { AppShell, Burger, Group, Title, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useAuth } from '@/auth';
@@ -7,7 +14,9 @@ import LoginPage from '@/pages/LoginPage';
 import VideosPage from '@/pages/VideosPage';
 import VideoDetailPage from '@/pages/VideoDetailPage';
 
-export const rootRoute = createRootRoute({
+type RouterContext = { authed: boolean };
+
+export const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: function Root() {
     const [opened, { toggle }] = useDisclosure();
     const auth = useAuth();
