@@ -5,13 +5,22 @@ import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
-import { routeTree } from './routes'; // ← use manual routes.tsx export
+import { routeTree } from './routes';
 import { AuthProvider, useAuth } from '@/auth';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
+// ---- TanStack Router typed context ----
+type RouterContext = { authed: boolean };
+
 const queryClient = new QueryClient();
-const router = createRouter({ routeTree });
+
+// Provide a default context value here to satisfy TS.
+// The real value is supplied at runtime via <RouterProvider context={...} />.
+const router = createRouter({
+  routeTree,
+  context: { authed: false } as RouterContext,
+});
 
 declare module '@tanstack/react-router' {
   interface Register {
@@ -25,7 +34,6 @@ function AppBody() {
     <QueryClientProvider client={queryClient}>
       <MantineProvider defaultColorScheme="dark">
         <Notifications position="top-right" />
-        {/* Pass auth state & force guards to re-run when it changes */}
         <RouterProvider
           key={auth.isAuthed ? 'authed' : 'guest'}
           router={router}
