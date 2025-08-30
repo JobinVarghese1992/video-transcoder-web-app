@@ -1,4 +1,26 @@
-export const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || '';
+// src/api/index.ts
+
+// Allow reading runtime envs from window.__ENV__ when running in Docker/NGINX
+declare global {
+  interface Window {
+    __ENV__?: {
+      BASE_URL?: string;
+      APP_NAME?: string;
+      DEFAULT_PAGE_SIZE?: string;
+    };
+  }
+}
+
+// Prefer runtime value (injected by /env.js) and fall back to Vite build-time env.
+// Strip trailing slashes so `${BASE_URL}${path}` is safe.
+const RUNTIME_BASE_URL =
+  (typeof window !== 'undefined' && window.__ENV__?.BASE_URL) || '';
+
+export const BASE_URL = (
+  RUNTIME_BASE_URL ||
+  (import.meta.env.VITE_BASE_URL as string) ||
+  ''
+).replace(/\/+$/, '');
 
 export type LoginResponse = { token: string };
 
