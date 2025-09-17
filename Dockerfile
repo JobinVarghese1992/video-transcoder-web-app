@@ -8,9 +8,12 @@ COPY . .
 RUN npm run build
 
 FROM nginx:alpine
-RUN rm /etc/nginx/conf.d/default.conf
+# Remove the packaged default site
+RUN rm -f /etc/nginx/conf.d/default.conf
+# Copy YOUR config in as the only site
 COPY nginx.conf /etc/nginx/conf.d/app.conf
 
+# Copy the build output
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
