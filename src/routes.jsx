@@ -1,24 +1,24 @@
-// src/routes/index.jsx
 import {
   createRootRoute,
   createRoute,
   Outlet,
   redirect,
-  Link,
   useNavigate,
 } from "@tanstack/react-router";
 import { AppShell, Burger, Group, Title, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useAuth } from "./auth";
-import LoginPage from "./pages/LoginPage"; // auth screen
+import LoginPage from "./pages/LoginPage";
 import VideosPage from "./pages/VideosPage";
-import VideoDetailPage from "./pages/VideoDetailPage"; // details page
+import VideoDetailPage from "./pages/VideoDetailPage";
+import RegisterPage from "./pages/RegisterPage";
 
 export const rootRoute = createRootRoute({
   component: function Root() {
     const [opened, { toggle }] = useDisclosure();
     const auth = useAuth();
     const nav = useNavigate();
+
     return (
       <AppShell
         header={{ height: 56 }}
@@ -37,12 +37,10 @@ export const rootRoute = createRootRoute({
                 hiddenFrom="sm"
                 size="sm"
               />
-              <Title order={3}>
-                {import.meta.env.VITE_APP_NAME || "Video Transcoder"}
-              </Title>
+              <Title order={3}>Video Transcoder</Title>
             </Group>
             <Group>
-              {auth.isAuthed ? (
+              {auth.isAuthed && (
                 <Button
                   size="xs"
                   variant="default"
@@ -52,10 +50,6 @@ export const rootRoute = createRootRoute({
                   }}
                 >
                   Logout
-                </Button>
-              ) : (
-                <Button size="xs" variant="light" component={Link} to="/login">
-                  Login
                 </Button>
               )}
             </Group>
@@ -86,6 +80,12 @@ export const loginRoute = createRoute({
   component: LoginPage,
 });
 
+export const RegisterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/register",
+  component: RegisterPage,
+});
+
 export const videoDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/videos/$videoId",
@@ -96,5 +96,6 @@ export const videoDetailRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
+  RegisterRoute,
   videoDetailRoute,
 ]);

@@ -1,4 +1,3 @@
-// src/pages/LoginPage.jsx
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -12,17 +11,17 @@ import { notifications } from "@mantine/notifications";
 import { useAuth } from "../auth";
 import { Link, useNavigate } from "@tanstack/react-router";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const nav = useNavigate();
   const { login, isAuthed } = useAuth();
+  const [name, setN] = useState("");
   const [username, setU] = useState("");
   const [password, setP] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Navigate only after auth state actually flips to true
   useEffect(() => {
     if (isAuthed) {
-      nav({ to: "/" }); // or replace: true if you prefer
+      nav({ to: "/" });
     }
   }, [isAuthed, nav]);
 
@@ -30,16 +29,16 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(username, password);
+      await register(name, username, password);
       notifications.show({
         title: "Welcome",
-        message: "Logged in successfully",
+        message: "Registered successfully",
       });
       // NOTE: no immediate nav here; the effect above will run once isAuthed updates
     } catch (e) {
       notifications.show({
         color: "red",
-        title: "Login failed",
+        title: "Registration failed",
         message: e.message,
       });
     } finally {
@@ -51,10 +50,16 @@ export default function LoginPage() {
     <Stack align="center" justify="center" style={{ height: "80vh" }}>
       <Card w={380} withBorder>
         <Title order={3} mb="md">
-          Sign in
+          Register
         </Title>
         <form onSubmit={onSubmit}>
           <Stack>
+            <TextInput
+              label="Name"
+              value={name}
+              onChange={(e) => setN(e.currentTarget.value)}
+              required
+            />
             <TextInput
               label="Username"
               value={username}
@@ -72,9 +77,9 @@ export default function LoginPage() {
             </Button>
             <Link
               style={{ display: "flex", justifyContent: "center" }}
-              to="/register"
+              to="/login"
             >
-              Don't have an account? Register
+              Already have an account? Login
             </Link>
           </Stack>
         </form>
