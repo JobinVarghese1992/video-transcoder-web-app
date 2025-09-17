@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// src/pages/VideosPage.jsx
+import { useState } from "react";
 import {
   ActionIcon,
   Badge,
@@ -12,27 +13,30 @@ import {
   TextInput,
   Title,
   Tooltip,
-} from '@mantine/core';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { IconPlayerPlay, IconRefresh, IconSearch, IconUpload } from '@tabler/icons-react';
-import * as API from '@/api';
-import UploadDialog from '@/components/UploadDialog';
-import { Link } from '@tanstack/react-router';
+} from "@mantine/core";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  IconPlayerPlay,
+  IconRefresh,
+  IconSearch,
+  IconUpload,
+} from "@tabler/icons-react";
+import * as API from "../api";
+import UploadDialog from "../components/UploadDialog";
+import { Link } from "@tanstack/react-router";
 
-function StatusBadge({
-  s,
-}: {
-  s?: API.VideoItem['variants'] extends (infer V)[]
-    ? V extends { transcode_status: string }
-      ? V['transcode_status']
-      : string
-    : string;
-}) {
+function StatusBadge({ s }) {
   const color =
-    s === 'completed' ? 'green' : s === 'processing' || s === 'queued' ? 'yellow' : s === 'failed' ? 'red' : 'gray';
+    s === "completed"
+      ? "green"
+      : s === "processing" || s === "queued"
+      ? "yellow"
+      : s === "failed"
+      ? "red"
+      : "gray";
   return (
     <Badge color={color} variant="light">
-      {s || 'uploaded'}
+      {s || "uploaded"}
     </Badge>
   );
 }
@@ -43,23 +47,31 @@ export default function VideosPage() {
   // Parse default page size once, safely
   const DEFAULT_PAGE_SIZE = (() => {
     const raw = import.meta.env.VITE_DEFAULT_PAGE_SIZE;
-    const n = parseInt(typeof raw === 'string' ? raw : '', 10);
+    const n = parseInt(typeof raw === "string" ? raw : "", 10);
     return Number.isFinite(n) && n > 0 ? n : 20;
   })();
 
   // Cursor-based pagination (DynamoDB style)
-  const [cursorStack, setCursorStack] = useState<string[]>([]); // JSON strings
+  const [cursorStack, setCursorStack] = useState([]); // JSON strings
   const currentCursor = cursorStack[cursorStack.length - 1];
 
   const [limit, setLimit] = useState(DEFAULT_PAGE_SIZE);
-  const [sort, setSort] = useState('createdAt:desc');
-  const [q, setQ] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [sort, setSort] = useState("createdAt:desc");
+  const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState(undefined);
   const [open, setOpen] = useState(false);
 
   const { data, isFetching } = useQuery({
-    queryKey: ['videos', currentCursor ?? null, limit, sort, q, statusFilter],
-    queryFn: () => API.listVideos({ cursor: currentCursor, limit, sort, q, createdBy: 'me', filter: statusFilter }),
+    queryKey: ["videos", currentCursor ?? null, limit, sort, q, statusFilter],
+    queryFn: () =>
+      API.listVideos({
+        cursor: currentCursor,
+        limit,
+        sort,
+        q,
+        createdBy: "me",
+        filter: statusFilter,
+      }),
     keepPreviousData: true,
     staleTime: 5_000,
   });
@@ -88,7 +100,10 @@ export default function VideosPage() {
       <Group justify="space-between">
         <Title order={3}>My videos</Title>
         <Group>
-          <Button leftSection={<IconUpload size={16} />} onClick={() => setOpen(true)}>
+          <Button
+            leftSection={<IconUpload size={16} />}
+            onClick={() => setOpen(true)}
+          >
             Upload
           </Button>
         </Group>
@@ -106,13 +121,13 @@ export default function VideosPage() {
         />
         <Select
           data={[
-            { value: '', label: 'All statuses' },
-            { value: 'transcode_status:completed', label: 'Completed' },
-            { value: 'transcode_status:processing', label: 'Processing' },
-            { value: 'transcode_status:queued', label: 'Queued' },
-            { value: 'transcode_status:failed', label: 'Failed' },
+            { value: "", label: "All statuses" },
+            { value: "transcode_status:completed", label: "Completed" },
+            { value: "transcode_status:processing", label: "Processing" },
+            { value: "transcode_status:queued", label: "Queued" },
+            { value: "transcode_status:failed", label: "Failed" },
           ]}
-          value={statusFilter ?? ''}
+          value={statusFilter ?? ""}
           onChange={(v) => {
             setStatusFilter(v || undefined);
             resetPagination();
@@ -122,21 +137,24 @@ export default function VideosPage() {
         />
         <Select
           data={[
-            { value: 'createdAt:desc', label: 'Newest' },
-            { value: 'createdAt:asc', label: 'Oldest' },
-            { value: 'fileName:asc', label: 'Name A→Z' },
-            { value: 'fileName:desc', label: 'Name Z→A' },
+            { value: "createdAt:desc", label: "Newest" },
+            { value: "createdAt:asc", label: "Oldest" },
+            { value: "fileName:asc", label: "Name A→Z" },
+            { value: "fileName:desc", label: "Name Z→A" },
           ]}
           value={sort}
           onChange={(v) => {
-            setSort(v!);
+            setSort(v);
             resetPagination();
           }}
           label="Sort"
           w={220}
         />
         <Select
-          data={[2, 5, 10, 20].map((n) => ({ value: String(n), label: `${n}/page` }))}
+          data={[2, 5, 10, 20].map((n) => ({
+            value: String(n),
+            label: `${n}/page`,
+          }))}
           value={String(limit)}
           onChange={(v) => {
             const next = v ? parseInt(v, 10) : limit;
@@ -151,7 +169,7 @@ export default function VideosPage() {
           variant="light"
           onClick={() => {
             resetPagination();
-            qc.invalidateQueries({ queryKey: ['videos'] });
+            qc.invalidateQueries({ queryKey: ["videos"] });
           }}
           loading={isFetching}
         >
@@ -173,14 +191,20 @@ export default function VideosPage() {
               </Text>
             )}
             <Group mt="sm" justify="space-between">
-              <Button component={Link} to="/videos/$videoId" params={{ videoId: v.videoId }} size="xs" variant="subtle">
+              <Button
+                component={Link}
+                to="/videos/$videoId"
+                params={{ videoId: v.videoId }}
+                size="xs"
+                variant="subtle"
+              >
                 Open
               </Button>
               <Tooltip label="Start (re)transcode">
                 <ActionIcon
                   onClick={async () => {
                     await API.startTranscode(v.videoId);
-                    qc.invalidateQueries({ queryKey: ['videos'] });
+                    qc.invalidateQueries({ queryKey: ["videos"] });
                   }}
                   variant="light"
                 >
@@ -207,7 +231,7 @@ export default function VideosPage() {
         onClose={() => setOpen(false)}
         onDone={() => {
           resetPagination();
-          qc.invalidateQueries({ queryKey: ['videos'] });
+          qc.invalidateQueries({ queryKey: ["videos"] });
         }}
       />
     </Stack>
