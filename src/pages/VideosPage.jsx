@@ -46,7 +46,7 @@ export default function VideosPage() {
 
   // Parse default page size once, safely
   const DEFAULT_PAGE_SIZE = (() => {
-    const raw = import.meta.env.VITE_DEFAULT_PAGE_SIZE;
+    const raw = import.meta.env.VITE_DEFAULT_PAGE_SIZE || "20";
     const n = parseInt(typeof raw === "string" ? raw : "", 10);
     return Number.isFinite(n) && n > 0 ? n : 20;
   })();
