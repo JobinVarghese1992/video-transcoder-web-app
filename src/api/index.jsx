@@ -1,4 +1,4 @@
-export const BASE_URL = import.meta.env.VITE_BASE_URL || window.location.origin;
+export const BASE_URL = `${window.location.origin}:3000`;
 
 let _token = null;
 
