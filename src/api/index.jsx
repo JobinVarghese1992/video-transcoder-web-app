@@ -1,4 +1,4 @@
-export const BASE_URL = `${window.location.origin}:3000`;
+export const BASE_URL = `${window.location.origin}`;
 
 let _token = null;
 
