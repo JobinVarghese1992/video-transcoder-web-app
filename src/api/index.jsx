@@ -1,6 +1,6 @@
 import { notifications } from "@mantine/notifications";
 
-export const BASE_URL = `http://ec2-54-206-19-190.ap-southeast-2.compute.amazonaws.com`;
+export const BASE_URL = window.location.origin;
 
 let _token = null;
 
