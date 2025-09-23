@@ -10,12 +10,13 @@ import {
 import { notifications } from "@mantine/notifications";
 import { useAuth } from "../auth";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { register } from "../api";
 
 export default function RegisterPage() {
   const nav = useNavigate();
   const { login, isAuthed } = useAuth();
-  const [name, setN] = useState("");
   const [username, setU] = useState("");
+  const [email, setE] = useState("");
   const [password, setP] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,18 +30,14 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await register(name, username, password);
-      notifications.show({
-        title: "Welcome",
-        message: "Registered successfully",
-      });
-      // NOTE: no immediate nav here; the effect above will run once isAuthed updates
+      const j = await register(username, email, password);
+      if (j.success === true) {
+        nav({
+          to: "/confirmauth",
+          search: { username: username, signup: true },
+        });
+      }
     } catch (e) {
-      notifications.show({
-        color: "red",
-        title: "Registration failed",
-        message: e.message,
-      });
     } finally {
       setLoading(false);
     }
@@ -55,15 +52,15 @@ export default function RegisterPage() {
         <form onSubmit={onSubmit}>
           <Stack>
             <TextInput
-              label="Name"
-              value={name}
-              onChange={(e) => setN(e.currentTarget.value)}
-              required
-            />
-            <TextInput
               label="Username"
               value={username}
               onChange={(e) => setU(e.currentTarget.value)}
+              required
+            />
+            <TextInput
+              label="Email"
+              value={email}
+              onChange={(e) => setE(e.currentTarget.value)}
               required
             />
             <PasswordInput
@@ -73,7 +70,7 @@ export default function RegisterPage() {
               required
             />
             <Button type="submit" loading={loading}>
-              Login
+              Register
             </Button>
             <Link
               style={{ display: "flex", justifyContent: "center" }}

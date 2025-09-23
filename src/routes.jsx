@@ -12,6 +12,7 @@ import LoginPage from "./pages/LoginPage";
 import VideosPage from "./pages/VideosPage";
 import VideoDetailPage from "./pages/VideoDetailPage";
 import RegisterPage from "./pages/RegisterPage";
+import ConfirmAuth from "./pages/ConfirmAuth";
 
 export const rootRoute = createRootRoute({
   component: function Root() {
@@ -80,6 +81,12 @@ export const loginRoute = createRoute({
   component: LoginPage,
 });
 
+export const confirmAuthRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/confirmauth",
+  component: ConfirmAuth,
+});
+
 export const RegisterRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/register",
@@ -98,4 +105,5 @@ export const routeTree = rootRoute.addChildren([
   loginRoute,
   RegisterRoute,
   videoDetailRoute,
+  confirmAuthRoute,
 ]);

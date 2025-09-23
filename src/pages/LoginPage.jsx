@@ -11,10 +11,11 @@ import {
 import { notifications } from "@mantine/notifications";
 import { useAuth } from "../auth";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { login } from "../api";
 
 export default function LoginPage() {
   const nav = useNavigate();
-  const { login, isAuthed } = useAuth();
+  const { isAuthed } = useAuth();
   const [username, setU] = useState("");
   const [password, setP] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,18 +31,14 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(username, password);
-      notifications.show({
-        title: "Welcome",
-        message: "Logged in successfully",
-      });
-      // NOTE: no immediate nav here; the effect above will run once isAuthed updates
+      const j = await login(username, password);
+      if (j.success === true) {
+        nav({
+          to: "/confirmauth",
+          search: { username: username, signup: false, session: j.session },
+        });
+      }
     } catch (e) {
-      notifications.show({
-        color: "red",
-        title: "Login failed",
-        message: e.message,
-      });
     } finally {
       setLoading(false);
     }

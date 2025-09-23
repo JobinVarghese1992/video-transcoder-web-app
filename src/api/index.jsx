@@ -1,4 +1,6 @@
-export const BASE_URL = `${window.location.origin}`;
+import { notifications } from "@mantine/notifications";
+
+export const BASE_URL = `http://ec2-54-206-19-190.ap-southeast-2.compute.amazonaws.com`;
 
 let _token = null;
 
@@ -46,17 +48,105 @@ export async function login(username, password) {
     body: JSON.stringify({ username, password }),
   });
   const j = await r.json();
-  setToken(j.token);
-  return j;
+  if (j.success === false) {
+    if (j.message === "Incorrect username or password.") {
+      notifications.show({
+        color: "red",
+        title: "Login Failed",
+        message: "Incorrect username or password.",
+      });
+    }
+  }
+  if (j.success === true) {
+    return j;
+  }
 }
 
-export async function register(name, username, password) {
-  const r = await req("/api/v1/auth/register", {
+export async function register(username, email, password) {
+  const r = await req("/api/v1/auth/signup", {
     method: "POST",
-    body: JSON.stringify({ name, username, password }),
+    body: JSON.stringify({ username, email, password }),
   });
   const j = await r.json();
-  setToken(j.token);
+  if (j.success === false) {
+    if (j.message === "Password does not meet security requirements.") {
+      notifications.show({
+        color: "red",
+        title: "Weak Password",
+        message:
+          "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+      });
+    } else if (
+      j.message ===
+      "1 validation error detected: Value at 'username' failed to satisfy constraint: Member must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+"
+    ) {
+      notifications.show({
+        color: "red",
+        title: "Invalid Username",
+        message:
+          "Username can only contain letters, numbers, and special characters and no spaces.",
+      });
+    } else if (j.message === "This username already exists.") {
+      notifications.show({
+        color: "red",
+        title: "Username Taken",
+        message: "Please choose a different username.",
+      });
+    }
+  }
+  if (j.success === true) {
+    return j;
+  }
+}
+
+export async function confirmSignup(username, confirmationCode) {
+  const r = await req("/api/v1/auth/confirm-signup", {
+    method: "POST",
+    body: JSON.stringify({ username, confirmationCode }),
+  });
+  const j = await r.json();
+  if (j.success === false) {
+    if (j.message === "Invalid confirmation code.") {
+      notifications.show({
+        color: "red",
+        title: "Invalid Code",
+        message:
+          "The verification code you entered is incorrect. Please try again.",
+      });
+    }
+  }
+  if (j.success === true) {
+    notifications.show({
+      title: "Success",
+      message: "Your account has been verified. You can now log in.",
+    });
+    return j;
+  }
+}
+
+export async function confirmSignin(username, confirmationCode, session) {
+  const r = await req("/api/v1/auth/confirm-signin", {
+    method: "POST",
+    body: JSON.stringify({ username, confirmationCode, session }),
+  });
+  const j = await r.json();
+  if (j.success === false) {
+    if (j.message === "Invalid code.") {
+      notifications.show({
+        color: "red",
+        title: "Invalid Code",
+        message:
+          "The verification code you entered is incorrect. Please try again.",
+      });
+    }
+  }
+  if (j.success === true) {
+    notifications.show({
+      title: "Success",
+      message: "You have been signed in successfully.",
+    });
+    return j;
+  }
   return j;
 }
 

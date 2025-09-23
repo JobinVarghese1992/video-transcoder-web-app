@@ -20,9 +20,8 @@ export function AuthProvider({ children }) {
     () => ({
       token,
       isAuthed: !!token,
-      async login(username, password) {
-        const r = await API.login(username, password);
-        setTok(r.token);
+      async settoken(token) {
+        setTok(token);
       },
       logout() {
         API.logout();
