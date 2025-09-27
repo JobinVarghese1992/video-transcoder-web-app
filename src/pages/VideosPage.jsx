@@ -66,7 +66,7 @@ export default function VideosPage() {
         limit,
         sort,
         q,
-        createdBy: "me",
+        // createdBy: "me",
         filter: statusFilter,
       }),
     keepPreviousData: true,
