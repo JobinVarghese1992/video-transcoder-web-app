@@ -114,7 +114,7 @@ export default function VideoDetailPage() {
         </Group>
       </Group>
 
-      <Card withBorder>
+      {/* <Card withBorder>
         <Title order={5}>Metadata</Title>
         <TextInput
           label="Title"
@@ -127,7 +127,7 @@ export default function VideoDetailPage() {
           defaultValue={data.description || ""}
           onBlur={(e) => mSave.mutate({ description: e.currentTarget.value })}
         />
-      </Card>
+      </Card> */}
 
       <Card withBorder>
         <Title order={5}>Transcoded variants</Title>
