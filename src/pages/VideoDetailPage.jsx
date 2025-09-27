@@ -1,4 +1,4 @@
-// src/pages/VideoDetailPage.jsx
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "@tanstack/react-router";
 import {
@@ -10,6 +10,7 @@ import {
   Textarea,
   TextInput,
   Title,
+  LoadingOverlay,
 } from "@mantine/core";
 import * as API from "../api";
 import { notifications } from "@mantine/notifications";
@@ -18,10 +19,34 @@ export default function VideoDetailPage() {
   const { videoId } = useParams({ from: "/videos/$videoId" });
   const qc = useQueryClient();
   const router = useRouter();
-  const { data } = useQuery({
+
+  const [poll, setPoll] = useState(false);
+
+  const { data, refetch, isFetching } = useQuery({
     queryKey: ["video", videoId],
     queryFn: () => API.getVideo(videoId),
+    refetchInterval: poll ? 3000 : false,
+    refetchIntervalInBackground: true,
   });
+
+  const hasCompletedTranscode = useMemo(() => {
+    const variants = data?.variants ?? [];
+    return variants.some(
+      (v) =>
+        v.format?.toLowerCase() !== "mp4" && v.transcode_status === "completed"
+    );
+  }, [data]);
+
+  useEffect(() => {
+    if (poll && hasCompletedTranscode) {
+      setPoll(false);
+      notifications.show({
+        title: "Transcode complete",
+        message: "Your MKV is ready.",
+      });
+      refetch();
+    }
+  }, [poll, hasCompletedTranscode, refetch]);
 
   const mSave = useMutation({
     mutationFn: (patch) => API.updateVideo(videoId, patch),
@@ -39,10 +64,36 @@ export default function VideoDetailPage() {
     },
   });
 
+  const mTranscode = useMutation({
+    mutationFn: () => API.startTranscode(videoId),
+    onSuccess: async (res) => {
+      setPoll(true);
+      await refetch();
+      notifications.show({
+        title: "Transcoding started",
+        message:
+          res?.status === "already_exists"
+            ? "Variant already exists. Refreshing…"
+            : "Waiting for completion…",
+      });
+    },
+    onError: (err) => {
+      notifications.show({
+        color: "red",
+        title: "Transcode failed",
+        message: err?.message || "Try again",
+      });
+    },
+  });
+
   if (!data) return null;
 
+  const showTranscodeSpinner = mTranscode.isPending || poll || isFetching;
+
   return (
-    <Stack p="md">
+    <Stack p="md" pos="relative">
+      {/* <LoadingOverlay visible={poll} zIndex={1000} overlayProps={{ blur: 2 }} /> */}
+
       <Group justify="space-between">
         <Title order={3}>{data.fileName}</Title>
         <Group>
@@ -55,12 +106,10 @@ export default function VideoDetailPage() {
             Delete
           </Button>
           <Button
-            onClick={async () => {
-              await API.startTranscode(videoId);
-              qc.invalidateQueries({ queryKey: ["video", videoId] });
-            }}
+            onClick={() => mTranscode.mutate()}
+            loading={showTranscodeSpinner}
           >
-            Transcode
+            {showTranscodeSpinner ? "Transcoding…" : "Transcode"}
           </Button>
         </Group>
       </Group>
@@ -86,7 +135,7 @@ export default function VideoDetailPage() {
           <Stack>
             {data.variants.map((v) => (
               <Card key={v.variantId} withBorder>
-                <Group justify="space-between">
+                <Group justify="space-between" align="flex-start">
                   <Stack gap={2}>
                     <Text fw={600}>
                       {v.format.toUpperCase()} · {v.resolution}

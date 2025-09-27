@@ -38,7 +38,13 @@ export const rootRoute = createRootRoute({
                 hiddenFrom="sm"
                 size="sm"
               />
-              <Title order={3}>Video Transcoder</Title>
+              <Title
+                style={{ cursor: "pointer" }}
+                order={3}
+                onClick={() => nav({ to: "/" })}
+              >
+                Video Transcoder
+              </Title>
             </Group>
             <Group>
               {auth.isAuthed && (
