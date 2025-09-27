@@ -1,4 +1,3 @@
-// src/pages/LoginPage.jsx
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -20,10 +19,9 @@ export default function LoginPage() {
   const [password, setP] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Navigate only after auth state actually flips to true
   useEffect(() => {
     if (isAuthed) {
-      nav({ to: "/" }); // or replace: true if you prefer
+      nav({ to: "/" });
     }
   }, [isAuthed, nav]);
 

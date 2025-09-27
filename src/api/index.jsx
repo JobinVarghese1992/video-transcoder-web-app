@@ -24,7 +24,6 @@ async function req(path, init = {}) {
 
   const r = await fetch(`${BASE_URL}${path}`, { ...init, headers });
 
-  // Optional: auto-logout on 401 so the app can recover gracefully
   if (r.status === 401) {
     setToken(null);
     if (typeof window !== "undefined") {

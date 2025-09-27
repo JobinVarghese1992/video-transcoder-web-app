@@ -1,4 +1,3 @@
-// File: src/components/UploadDialog.jsx
 import { useState } from "react";
 import {
   Button,

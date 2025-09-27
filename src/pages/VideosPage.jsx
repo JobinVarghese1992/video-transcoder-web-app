@@ -1,4 +1,3 @@
-// src/pages/VideosPage.jsx
 import { useState } from "react";
 import {
   ActionIcon,
@@ -44,15 +43,13 @@ function StatusBadge({ s }) {
 export default function VideosPage() {
   const qc = useQueryClient();
 
-  // Parse default page size once, safely
   const DEFAULT_PAGE_SIZE = (() => {
     const raw = import.meta.env.VITE_DEFAULT_PAGE_SIZE || "20";
     const n = parseInt(typeof raw === "string" ? raw : "", 10);
     return Number.isFinite(n) && n > 0 ? n : 20;
   })();
 
-  // Cursor-based pagination (DynamoDB style)
-  const [cursorStack, setCursorStack] = useState([]); // JSON strings
+  const [cursorStack, setCursorStack] = useState([]);
   const currentCursor = cursorStack[cursorStack.length - 1];
 
   const [limit, setLimit] = useState(DEFAULT_PAGE_SIZE);
@@ -91,7 +88,7 @@ export default function VideosPage() {
   function goNext() {
     const nextCursorObj = data?.pagination?.cursor;
     if (!nextCursorObj) return;
-    const json = JSON.stringify(nextCursorObj); // raw JSON; API encodes it
+    const json = JSON.stringify(nextCursorObj);
     setCursorStack((s) => [...s, json]);
   }
 
