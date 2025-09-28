@@ -119,4 +119,5 @@ export const routeTree = rootRoute.addChildren([
   RegisterRoute,
   videoDetailRoute,
   confirmAuthRoute,
+  OAuthPage,
 ]);
