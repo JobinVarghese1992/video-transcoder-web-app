@@ -67,6 +67,12 @@ export default function LoginPage() {
             </Button>
             <Link
               style={{ display: "flex", justifyContent: "center" }}
+              to={import.meta.env.VITE_OAUTH_REDIRECT_URI}
+            >
+              Sign in with Google
+            </Link>
+            <Link
+              style={{ display: "flex", justifyContent: "center" }}
               to="/register"
             >
               Don't have an account? Register

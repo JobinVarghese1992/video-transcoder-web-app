@@ -13,6 +13,7 @@ import VideosPage from "./pages/VideosPage";
 import VideoDetailPage from "./pages/VideoDetailPage";
 import RegisterPage from "./pages/RegisterPage";
 import ConfirmAuth from "./pages/ConfirmAuth";
+import OAuthloader from "./pages/OAuthloader";
 
 export const rootRoute = createRootRoute({
   component: function Root() {
@@ -97,6 +98,12 @@ export const RegisterRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/register",
   component: RegisterPage,
+});
+
+export const OAuthPage = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/oauth",
+  component: OAuthloader,
 });
 
 export const videoDetailRoute = createRoute({
