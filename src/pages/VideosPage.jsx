@@ -12,6 +12,7 @@ import {
   TextInput,
   Title,
   Tooltip,
+  Image,
 } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,6 +20,7 @@ import {
   IconRefresh,
   IconSearch,
   IconUpload,
+  IconCheck,
 } from "@tabler/icons-react";
 import * as API from "../api";
 import UploadDialog from "../components/UploadDialog";
@@ -37,6 +39,28 @@ function StatusBadge({ s }) {
     <Badge color={color} variant="light">
       {s || "uploaded"}
     </Badge>
+  );
+}
+
+// tiny helper for a nice placeholder when img_url is missing
+function ThumbFallback({ fileName }) {
+  return (
+    <div
+      style={{
+        height: 160,
+        background:
+          "repeating-linear-gradient(135deg,#f2f2f2,#f2f2f2 12px,#e9e9e9 12px,#e9e9e9 24px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#666",
+        fontSize: 12,
+        padding: "0 12px",
+        textAlign: "center",
+      }}
+    >
+      {fileName}
+    </div>
   );
 }
 
@@ -66,7 +90,6 @@ export default function VideosPage() {
         limit,
         sort,
         q,
-        // createdBy: "me",
         filter: statusFilter,
       }),
     keepPreviousData: true,
@@ -175,42 +198,88 @@ export default function VideosPage() {
       </Group>
 
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-        {data?.videos?.map((v) => (
-          <Card key={v.videoId} withBorder>
-            <Group justify="space-between" mb="xs">
-              <Text fw={600}>{v.fileName}</Text>
-              <StatusBadge s={v.variants?.[0]?.transcode_status} />
-            </Group>
-            {v.title && <Text>{v.title}</Text>}
-            {v.description && (
-              <Text c="dimmed" size="sm" lineClamp={2}>
-                {v.description}
-              </Text>
-            )}
-            <Group mt="sm" justify="space-between">
-              <Button
-                component={Link}
-                to="/videos/$videoId"
-                params={{ videoId: v.videoId }}
-                size="xs"
-                variant="subtle"
-              >
-                Open
-              </Button>
-              <Tooltip label="Start (re)transcode">
-                <ActionIcon
-                  onClick={async () => {
-                    await API.startTranscode(v.videoId);
-                    qc.invalidateQueries({ queryKey: ["videos"] });
-                  }}
-                  variant="light"
+        {data?.videos?.map((v) => {
+          const isDone = v?.transcode_status === "completed";
+          return (
+            <Card key={v.videoId} withBorder padding="sm" radius="md">
+              {/* Thumbnail with completed check overlay */}
+              <div style={{ position: "relative" }}>
+                {v.img_url ? (
+                  <Image
+                    src={v.img_url}
+                    h={160}
+                    fit="cover"
+                    radius="sm"
+                    alt={v.fileName}
+                    fallbackSrc="" // Mantine shows nothing on error; we provide a custom fallback below
+                    styles={{ image: { objectPosition: "center" } }}
+                  />
+                ) : (
+                  <ThumbFallback fileName={v.fileName} />
+                )}
+
+                {isDone && (
+                  <div
+                    title="Transcoded"
+                    style={{
+                      position: "absolute",
+                      right: 8,
+                      top: 8,
+                      background: "rgba(34,197,94,0.9)", // green-500-ish
+                      color: "white",
+                      borderRadius: 999,
+                      width: 28,
+                      height: 28,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+                    }}
+                  >
+                    <IconCheck size={18} />
+                  </div>
+                )}
+              </div>
+
+              <Group justify="space-between" mt="sm" mb="xs">
+                <Text fw={600} lineClamp={1} title={v.fileName}>
+                  {v.fileName}
+                </Text>
+                <StatusBadge s={v.transcode_status} />
+              </Group>
+
+              {v.title && <Text>{v.title}</Text>}
+              {v.description && (
+                <Text c="dimmed" size="sm" lineClamp={2}>
+                  {v.description}
+                </Text>
+              )}
+
+              <Group mt="sm" justify="space-between">
+                <Button
+                  component={Link}
+                  to="/videos/$videoId"
+                  params={{ videoId: v.videoId }}
+                  size="xs"
+                  variant="subtle"
                 >
-                  <IconPlayerPlay size={16} />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
-          </Card>
-        ))}
+                  Open
+                </Button>
+                <Tooltip label="Start (re)transcode">
+                  <ActionIcon
+                    onClick={async () => {
+                      await API.startTranscode(v.videoId);
+                      qc.invalidateQueries({ queryKey: ["videos"] });
+                    }}
+                    variant="light"
+                  >
+                    <IconPlayerPlay size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+            </Card>
+          );
+        })}
       </SimpleGrid>
 
       {/* Cursor controls */}
