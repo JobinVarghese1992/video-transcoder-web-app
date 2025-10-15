@@ -1,7 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "@tanstack/react-router";
-import { Button, Card, Group, Stack, Text, Title } from "@mantine/core";
+import {
+  Button,
+  Card,
+  Group,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+  Title,
+  LoadingOverlay,
+} from "@mantine/core";
 import * as API from "../api";
 import { notifications } from "@mantine/notifications";
 
@@ -11,75 +21,13 @@ export default function VideoDetailPage() {
   const router = useRouter();
 
   const [poll, setPoll] = useState(false);
-  const activeVariantIdRef = useRef(null);
 
-  const { data } = useQuery({
+  const { data, refetch, isFetching } = useQuery({
     queryKey: ["video", videoId],
     queryFn: () => API.getVideo(videoId),
-    refetchInterval: (query) => {
-      const current = query.state.data;
-      const anyProcessing =
-        current?.variants?.some((v) => v.transcode_status === "processing") ??
-        false;
-      return poll || anyProcessing ? 3000 : false;
-    },
+    refetchInterval: poll ? 3000 : false,
     refetchIntervalInBackground: true,
-    // We'll merge only the updated variant into cache on success
-    onSuccess: (fresh) => {
-      if (!fresh?.variants?.length) return;
-
-      const startedVariantId = activeVariantIdRef.current;
-      const anyProcessing = fresh.variants.some(
-        (v) => v.transcode_status === "processing"
-      );
-
-      // If user started a run, keep polling until their variant finishes.
-      if (poll && startedVariantId) {
-        const vNow = fresh.variants.find(
-          (v) => v.variantId === startedVariantId
-        );
-        if (vNow && vNow.transcode_status === "completed") {
-          // Update ONLY this variant object in cache (by index),
-          // so the video URL appears without churning the whole payload.
-          qc.setQueryData(["video", videoId], (old) => {
-            if (!old?.variants?.length) return old;
-            const idx = old.variants.findIndex(
-              (v) => v.variantId === startedVariantId
-            );
-            if (idx === -1) return old;
-
-            const updatedVariants = [...old.variants];
-            // Replace only that variant object with the fresh one
-            updatedVariants[idx] = {
-              ...old.variants[idx],
-              ...vNow,
-            };
-
-            return { ...old, variants: updatedVariants };
-          });
-
-          setPoll(false);
-          activeVariantIdRef.current = null;
-
-          notifications.show({
-            title: "Transcode complete",
-            message: "Your MKV is ready.",
-          });
-        }
-      }
-
-      // If no variants are processing anymore, ensure polling stops
-      if (!anyProcessing && poll === true) {
-        setPoll(false);
-      }
-    },
   });
-
-  const isProcessing = useMemo(() => {
-    return (
-      data?.variants?.some((v) => v.transcode_status === "processing") ?? false
-    );
-  }, [data]);
 
   const hasCompletedTranscode = useMemo(() => {
     const variants = data?.variants ?? [];
@@ -90,13 +38,23 @@ export default function VideoDetailPage() {
   }, [data]);
 
   useEffect(() => {
-    if ((poll || isProcessing) && !isProcessing && hasCompletedTranscode) {
+    if (poll && hasCompletedTranscode) {
+      setPoll(false);
       notifications.show({
         title: "Transcode complete",
         message: "Your MKV is ready.",
       });
+      refetch();
     }
-  }, [poll, isProcessing, hasCompletedTranscode]);
+  }, [poll, hasCompletedTranscode, refetch]);
+
+  const mSave = useMutation({
+    mutationFn: (patch) => API.updateVideo(videoId, patch),
+    onSuccess: () => {
+      notifications.show({ title: "Saved", message: "Metadata updated" });
+      qc.invalidateQueries({ queryKey: ["video", videoId] });
+    },
+  });
 
   const mDelete = useMutation({
     mutationFn: () => API.deleteVideo(videoId),
@@ -109,11 +67,8 @@ export default function VideoDetailPage() {
   const mTranscode = useMutation({
     mutationFn: () => API.startTranscode(videoId),
     onSuccess: async (res) => {
-      if (res?.variantId) {
-        activeVariantIdRef.current = res.variantId;
-      }
       setPoll(true);
-
+      await refetch();
       notifications.show({
         title: "Transcoding started",
         message:
@@ -133,10 +88,12 @@ export default function VideoDetailPage() {
 
   if (!data) return null;
 
-  const showTranscodeSpinner = mTranscode.isPending || poll || isProcessing;
+  const showTranscodeSpinner = mTranscode.isPending || poll || isFetching;
 
   return (
     <Stack p="md" pos="relative">
+      {/* <LoadingOverlay visible={poll} zIndex={1000} overlayProps={{ blur: 2 }} /> */}
+
       <Group justify="space-between">
         <Title order={3}>{data.fileName}</Title>
         <Group>
@@ -156,6 +113,21 @@ export default function VideoDetailPage() {
           </Button>
         </Group>
       </Group>
+
+      {/* <Card withBorder>
+        <Title order={5}>Metadata</Title>
+        <TextInput
+          label="Title"
+          defaultValue={data.title || ""}
+          onBlur={(e) => mSave.mutate({ title: e.currentTarget.value })}
+        />
+        <Textarea
+          label="Description"
+          minRows={3}
+          defaultValue={data.description || ""}
+          onBlur={(e) => mSave.mutate({ description: e.currentTarget.value })}
+        />
+      </Card> */}
 
       <Card withBorder>
         <Title order={5}>Transcoded variants</Title>
